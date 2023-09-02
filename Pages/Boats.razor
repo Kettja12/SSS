@@ -1,0 +1,123 @@
+﻿@page "/Boats"
+@inject StateContainer stateContainer
+@inject Repository repository
+<PageTitle>Boats</PageTitle>
+@if (stateContainer.IsLogin)
+{
+    if (viewBoatData == false )
+    {
+        if (stateContainer.CurrentUser.Id > 1)
+        {
+            
+        <button type="button" class="btn btn-primary" @onclick="ToggleBoat">
+            <i class="fa-solid fa-sailboat mx-2" aria-hidden="true"></i>
+            @if (currentUserBoat.Id == 0)
+            {
+                <span>Add My Boat</span>
+            }
+
+            else
+            {
+                <span>Edit My boat detais</span>
+
+            }
+        </button>
+        }
+
+    }
+    else
+    {
+        <form class="row g-3">
+            <h1>Edit Boat Data</h1>
+            <div class="mb-3" style="width:300px">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-control" @bind="currentUserBoat.Name">
+            </div>
+            <div class="mb-3" style="width:300px">
+                <label class="form-label">Type</label>
+                <input type="text" class="form-control" @bind="currentUserBoat.Type">
+            </div>
+            <div class="mb-3" style=" width:100px">
+                <label class="form-label">Sailnumber</label>
+                <input type="text" class="form-control" @bind="currentUserBoat.SailNumber">
+            </div>
+            <div class="mb-3 " style="width:300px">
+                <label class="form-label">Skipper</label>
+                <input type="text" class="form-control" @bind="currentUserBoat.Skipper">
+            </div>
+            <div class="mb-3" style="width:100px">
+                <label class="form-label">Finnrating</label>
+                <input type="text" class="form-control" @bind="currentUserBoat.Finnrating">
+            </div>
+            <button type="button" class="btn btn-primary mb-3 mt-5 col-3" @onclick="SaveBoat">Save</button>
+
+        </form>
+    }
+}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Sailnumber</th>
+            <th>Skipper</th>
+            <th>Finnrating</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var forecast in boats)
+        {
+            <tr>
+                <td>@forecast.Name</td>
+                <td>@forecast.Type</td>
+                <td>@forecast.SailNumber</td>
+                <td>@forecast.Skipper</td>
+                <td>@forecast.Finnrating.ToString("0.0000")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Boat> boats { get; set; } = new();
+    Boat currentUserBoat { get; set; } = new();
+    bool viewBoatData { get; set; } = false;
+    bool addVisible { get { return !viewBoatData; } }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            boats = await repository.GetBoatsAsync();
+            if (stateContainer.IsLogin)
+            {
+                currentUserBoat = boats.FirstOrDefault(x => x.UserId == stateContainer.CurrentUser.Id) ?? new();
+            }
+            StateHasChanged();
+        }
+    }
+
+    private void ChangePropertyValue()
+    {
+    }
+
+    public void Dispose()
+    {
+        stateContainer.OnChange -= StateHasChanged;
+    }
+
+    private void ToggleBoat()
+    {
+        viewBoatData = !viewBoatData;
+    }
+    private async Task SaveBoat()
+    {
+        if (currentUserBoat.Id == 0)
+        {
+            currentUserBoat.UserId = stateContainer.CurrentUser.Id;
+        }
+        await repository.SaveBoatAsync(currentUserBoat);
+        boats = await repository.GetBoatsAsync();
+        viewBoatData = !viewBoatData;
+    }
+}

@@ -29,6 +29,17 @@
                 @onclick="ToggleRaceMenu">
                     <i class="fa-solid fa-flag-checkered mx-2"></i> Sailing Race Starts
                 </NavLink>
+                <div class="@RaceMenuCssClass px-3">
+                    @foreach (var item in racelinks)
+                    {
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="@item.Url">
+                                <i class="fa-solid fa-flag-checkered mx-2" aria-hidden="true"></i> @item.Label
+                            </NavLink>
+                        </div>
+                    }
+                </div>
+
             </div>
         </nav>
         <div>
@@ -44,7 +55,10 @@
                 <div class="m-3">
                     <label class="form-label text-white">UserName</label>
                     <div class="input-group mb-3">
-                        <input type="text" class="form-control col-10" @onkeyup="Enter" @bind="username">
+                        <input type="text" class="form-control col-10" 
+                            @onfocusin="PreventToggle"
+                            @onfocusout="PreventToggle"
+                            @onkeyup="Enter" @bind="username">
                         <button type="button" class="btn btn-primary" @onclick="Login">
                             <i class="fa-solid fa-arrow-right-to-bracket "></i>
                         </button>
@@ -65,6 +79,7 @@
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
     private void ToggleNavMenu()
     {
+        if (preventToggleMenu) return;
         collapseNavMenu = !collapseNavMenu;
     }
     private bool collapseRaceMenu = false;
@@ -75,6 +90,13 @@
         ToggleNavMenu();
         collapseRaceMenu = !collapseRaceMenu;
     }
+    private bool preventToggleMenu = false;
+
+    private void PreventToggle()
+    {
+        preventToggleMenu = !preventToggleMenu;
+    }
+
     public async Task Enter(KeyboardEventArgs e)
     {
         if (e.Code == "Enter" || e.Code == "NumpadEnter")

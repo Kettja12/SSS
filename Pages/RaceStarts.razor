@@ -1,0 +1,266 @@
+﻿@page "/RaceStarts"
+@inject StateContainer stateContainer
+@inject Repository repository
+
+<PageTitle>RaceStarts</PageTitle>
+@if (stateContainer.IsLogin)
+{
+    if (viewRaceData == false)
+    {
+
+        if (stateContainer.CurrentUser.Id == 1)
+        {
+            <button type="button" class="btn btn-primary" @onclick="ToggleRaceDataAdd">
+                <i class="fa-solid fa-flag-checkered mx-2" aria-hidden="true"></i>
+                <span>Add Race</span>
+            </button>
+            if (currentRace.Id > 0)
+            {
+                <button type="button" class="btn btn-primary ms-2" @onclick="ToggleRaceData">
+                    <i class="fa-solid fa-flag-checkered mx-2" aria-hidden="true"></i>
+                    <span>Edit Race</span>
+                </button>
+            }
+        }
+    }
+    else
+    {
+        <form class="row g-3">
+            <h1>Edit Race Data</h1>
+            <div class="mb-3" style="width:300px">
+                <label class="form-label">Race Name</label>
+                <input type="text" class="form-control" @bind="currentRace.Name">
+            </div>
+            <div class="mb-3" style="width:300px">
+                <label class="form-label">Start Time</label>
+                <input type="text" class="form-control" @bind="currentRace.StartTime">
+            </div>
+            <button type="button" class="btn btn-primary mb-3 mt-5 col-3" @onclick="SaveRaceData">Save</button>
+        </form>
+    }
+    <form class="row g-3 mt-2">
+        @if (selectedRaceId > 0)
+        {
+            @if (stateContainer.CurrentUser.Id == 1)
+            {
+                <div class="col-3 mb-3">
+                    <label class="form-label">Race Name</label>
+                    <select class="form-select" @onchange="SetCurrentRaceAsync">
+                        @foreach (var item in races)
+                        {
+                            @if (item.Id == selectedRaceId)
+                            {
+                                <option value=@item.Id selected>@item.Name</option>
+                            }
+                            else
+                            {
+                                <option value=@item.Id>@item.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+            }
+
+            <div class="mb-3" style="width:200px">
+                <label class="form-label">Race Start</label>
+                <label class="form-control">@currentRace.StartTime.ToString()</label>
+            </div>
+            @if (stateContainer.CurrentUser.Id == 1)
+            {
+                <div class="col-3 mb-3">
+                    <label class="form-label">Boats</label>
+                    <select class="form-select" @onchange="SetBoat">
+                        @foreach (var item in boats)
+                        {
+                            @if (item.Id == selectedBoatId)
+                            {
+                                <option value=@item.Id selected>@item.Name</option>
+                            }
+                            else
+                            {
+                                <option value=@item.Id>@item.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+            }
+            <div class="mb-3 " style="width:150px">
+                <label class="form-label">Registration</label>
+                <div class="m-2">
+                    <InputCheckbox @bind-Value="@currentResult.Registration" />
+                </div>
+            </div>
+            <div class="input-group mb-3">
+            <div class="mb-3 " style="width:150px">
+                <label class="form-label">Endtime 1</label>
+                <input type="text" class="form-control" @bind="end1">
+            </div>
+
+            <div class="mb-3 " style="width:150px">
+                <label class="form-label">DNS 1</label>
+                <div class="m-2">
+                    <InputCheckbox @bind-Value="@currentResult.DNS1" />
+                </div>
+            </div>
+            <div class="mb-3 " style="width:100px">
+                <label class="form-label">DNF 1</label>
+                <div class="m-2">
+                    <InputCheckbox @bind-Value="@currentResult.DNF1" />
+                </div>
+            </div>
+
+            <div class="mb-3 " style="width:150px">
+                <label class="form-label">Endtime 2</label>
+                <input type="text" class="form-control" @bind="end2">
+            </div>
+            <div class="mb-3 " style="width:150px">
+                <label class="form-label">DNS 2</label>
+                <div class="m-2">
+                    <InputCheckbox @bind-Value="@currentResult.DNS2" />
+                </div>
+            </div>
+            <div class="mb-3 " style="width:150px">
+                <label class="form-label">DNF 2</label>
+                <div class="m-2">
+                    <InputCheckbox @bind-Value="@currentResult.DNF2" />
+                </div>
+            </div>
+            </div>
+            <button type="button" class="btn btn-primary mb-3 mt-5 col-2" @onclick="SaveResult">Save</button>
+
+        }
+
+    </form>
+}
+
+@code {
+    private List<Boat> boats { get; set; } = new();
+    private List<Race> races { get; set; } = new();
+    private Race currentRace { get; set; } = new();
+    private TimeSpan? end1 { get; set; }
+    private TimeSpan? end2 { get; set; }
+    private bool viewRaceData { get; set; } = false;
+    private int selectedRaceId;
+    private int selectedBoatId;
+    private List<Result> raceesults { get; set; } = new();
+    private Result currentResult { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            races = await repository.GetRacesAsync();
+            end1 = null;
+            end2 = null;
+            if (stateContainer.CurrentUser.Id == 1)
+            {
+                boats = await repository.GetBoatsAsync();
+                var selectedboat = boats.FirstOrDefault(x => x.UserId == stateContainer.CurrentUser.Id) ?? new();
+                selectedBoatId = selectedboat.Id;
+                currentRace = races.FirstOrDefault() ?? new();
+                selectedRaceId = currentRace.Id;
+                raceesults = await repository.GetResultsAsync(selectedRaceId);
+                currentResult = raceesults.Where(x => x.BoatId == selectedBoatId).FirstOrDefault() ?? new();
+            }
+            else
+            {
+                currentRace = races.Where(x => x.StartTime > DateTime.Today).FirstOrDefault() ?? new Race();
+            }
+            if (currentResult.FirstEndTime != null)
+            {
+                end1 = currentResult.FirstEndTime.Value.TimeOfDay;
+            }
+            if (currentResult.SecondEndTime != null)
+            {
+                end2 = currentResult.SecondEndTime.Value.TimeOfDay;
+            }
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleRaceDataAdd()
+    {
+        currentRace = new();
+        ToggleRaceData();
+    }
+
+    private void ToggleRaceData()
+    {
+        viewRaceData = !viewRaceData;
+    }
+    private async Task SaveRaceData()
+    {
+        viewRaceData = !viewRaceData;
+        await repository.SaveRaceAsync(currentRace);
+        races = await repository.GetRacesAsync();
+        currentRace = races.FirstOrDefault() ?? new();
+        StateHasChanged();
+    }
+    public async Task SetCurrentRaceAsync(ChangeEventArgs selectEvent)
+    {
+        if (int.TryParse(selectEvent.Value.ToString(), out selectedRaceId))
+        {
+            currentRace = races.FirstOrDefault(x => x.Id == selectedRaceId) ?? new();
+            raceesults = await repository.GetResultsAsync(selectedRaceId);
+            currentResult = raceesults.Where(x => x.BoatId == selectedBoatId).FirstOrDefault() ?? new();
+            end1 = null;
+            end2 = null;
+            if (currentResult.FirstEndTime != null)
+            {
+                end1 = currentResult.FirstEndTime.Value.TimeOfDay;
+            }
+            if (currentResult.SecondEndTime != null)
+            {
+                end2 = currentResult.SecondEndTime.Value.TimeOfDay;
+            }
+            StateHasChanged();
+        }
+    }
+    public void SetBoat(ChangeEventArgs selectEvent)
+    {
+        if (int.TryParse(selectEvent.Value.ToString(), out selectedBoatId))
+        {
+            currentResult = raceesults.Where(x => x.BoatId == selectedBoatId).FirstOrDefault() ?? new();
+            end1 = null;
+            end2 = null;
+            if (currentResult.FirstEndTime != null)
+            {
+                end1 = currentResult.FirstEndTime.Value.TimeOfDay;
+            }
+            if (currentResult.SecondEndTime != null)
+            {
+                end2 = currentResult.SecondEndTime.Value.TimeOfDay;
+            }
+            StateHasChanged();
+        }
+    }
+    private async Task SaveResult()
+    {
+        if (currentResult.Id == 0)
+        {
+            currentResult.RaceId = currentRace.Id;
+            currentResult.BoatId = selectedBoatId;
+        }
+        if (currentRace.StartTime != null)
+        {
+            var date = currentRace.StartTime.Value.Date;
+            if (end1 != null)
+            {
+                currentResult.FirstEndTime = date.Add(end1.Value);
+            }
+            if (end2 != null)
+            {
+                currentResult.SecondEndTime = date.Add(end2.Value);
+            }
+        }
+        await repository.SaveResultAsync(currentResult);
+        raceesults = await repository.GetResultsAsync(selectedRaceId);
+        StateHasChanged();
+    }
+
+}
