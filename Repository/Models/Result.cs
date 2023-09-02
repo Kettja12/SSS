@@ -1,0 +1,20 @@
+﻿namespace SSS.Repository.Models;
+
+public class Result
+{
+    public int Id { get; set; }
+    public int RaceId { get; set; }
+    public int BoatId { get; set; }
+    public DateTime? FirstEndTime { get; set; }
+    public DateTime? SecondEndTime { get; set; }
+    public bool DNF1 { get; set; }
+    public bool DNS1 { get; set; }
+    public int Place { get; set; }
+    public int Place2 { get; set; }
+    public bool DNF2 { get; set; }
+    public bool DNS2 { get; set; }
+    public bool Registration { get; set; }
+    public int Postition { get; set; }
+
+
+}
