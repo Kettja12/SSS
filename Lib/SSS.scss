@@ -1,0 +1,27 @@
+﻿@import "bootstrap/scss/bootstrap.scss";
+@import "Blazor.scss";
+body {
+    position: relative;
+    display: flex;
+}
+$colwidht: 360px;
+$colwidhts: (0:0,1:$colwidht*0.5, 2:$colwidht*0.75,3:$colwidht*1,4:$colwidht*1.5,5:$colwidht*3.0);
+
+@media (max-width: $colwidht*2) {
+    body{
+        flex-direction:column;
+    }
+}
+
+
+@each $index, $width in $colwidhts {
+    .cw-#{$index} {
+        min-width: $width !important;
+    }
+
+    .dw-#{$index} {
+        max-width: $width !important;
+    }
+}
+
+

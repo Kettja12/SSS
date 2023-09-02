@@ -1,0 +1,51 @@
+﻿<sidebar>
+    <div class="navbar navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="">Sailing Score Service</a>
+            <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+        </div>
+    </div>
+    <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+        <nav class="flex-column">
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <i class="fa-solid fa-clipboard-list mx-2"></i>Season
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="boats">
+                    <i class="fa-solid fa-sailboat mx-2" aria-hidden="true"></i> Boats
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="raceStarts"
+                @onclick="ToggleRaceMenu">
+                    <i class="fa-solid fa-flag-checkered mx-2"></i> Sailing Race Starts
+                </NavLink>
+            </div>
+        </nav>
+    </div>
+
+</sidebar>
+
+@code {
+    private bool collapseNavMenu = false;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+    private bool collapseRaceMenu = false;
+    private string? RaceMenuCssClass => collapseRaceMenu ? "" : "d-none";
+
+    private void ToggleRaceMenu()
+    {
+        ToggleNavMenu();
+        collapseRaceMenu = !collapseRaceMenu;
+    }
+}
