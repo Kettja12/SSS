@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Riok.Mapperly.Abstractions;
-using SSS.Repository.dbModels;
-using SSS.Repository.Models;
+using SSS.Repositories.dbModels;
+using SSS.Repositories.Models;
 using System.Runtime.CompilerServices;
 
-namespace SSS.Repository;
+namespace SSS.Repositories;
 
 public static partial class SSSMapper
 {

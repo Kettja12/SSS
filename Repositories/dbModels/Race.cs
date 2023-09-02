@@ -1,4 +1,4 @@
-﻿namespace SSS.Repository.dbModels;
+﻿namespace SSS.Repositories.dbModels;
 
 public class Race
 {

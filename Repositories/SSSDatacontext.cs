@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using SSS.Repository.dbModels;
+using SSS.Repositories.dbModels;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace SSS.Repository
+namespace SSS.Repositories
 {
     public partial  class SSSDatacontext:DbContext
     {

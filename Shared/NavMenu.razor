@@ -1,4 +1,8 @@
-﻿<sidebar>
+﻿@inject StateContainer stateContainer
+@inject Repository repository
+@inject NavigationManager navigationManager
+
+<sidebar>
     <div class="navbar navbar-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="">Sailing Score Service</a>
@@ -27,15 +31,38 @@
                 </NavLink>
             </div>
         </nav>
+        <div>
+            @if (stateContainer.IsLogin)
+            {
+                <button class="btn btn-primary ms-3 col-10" @onclick="Logout">
+                    @stateContainer.CurrentUser.Username
+                    <i class="fa-solid fa-arrow-right-from-bracket ms-1"></i>
+                </button>
+            }
+            else
+            {
+                <div class="m-3">
+                    <label class="form-label text-white">UserName</label>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control col-10" @onkeyup="Enter" @bind="username">
+                        <button type="button" class="btn btn-primary" @onclick="Login">
+                            <i class="fa-solid fa-arrow-right-to-bracket "></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
     </div>
 
 </sidebar>
 
 @code {
+    private string username { get; set; } = string.Empty;
+    private List<Race> races { get; set; } = new();
+    private List<RaceLinks> racelinks { get; set; } = new();
+
     private bool collapseNavMenu = false;
-
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
@@ -48,4 +75,56 @@
         ToggleNavMenu();
         collapseRaceMenu = !collapseRaceMenu;
     }
+    public async Task Enter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            await Login();
+        }
+    }
+
+    private void navigateRace(int race)
+    {
+        stateContainer.SelectedRace = race;
+        navigationManager.NavigateTo("/RaceResult/" + race.ToString());
+    }
+
+    private async Task Login()
+    {
+        User user = await repository.GetUserAsync(username) ?? new();
+        user = await repository.SaveUserAsync(user);
+        stateContainer.SetCurrentUser(user);
+        navigationManager.NavigateTo("/");
+    }
+    private void Logout()
+    {
+        stateContainer.SetCurrentUser(new());
+        StateHasChanged();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var temp = await repository.GetRacesAsync();
+            races = temp
+            .Where(x => x.StartTime < DateTime.Today.AddDays(6))
+            .ToList() ?? new();
+            racelinks = new();
+            foreach (var item in races)
+            {
+                racelinks.Add(new()
+                    {
+                        Url = "RaceResult/" + item.Id.ToString(),
+                        Label = item.Name
+                    });
+            }
+            StateHasChanged();
+        }
+    }
+    private class RaceLinks
+    {
+        public string Url { get; set; }
+        public string Label { get; set; }
+    }
+
 }

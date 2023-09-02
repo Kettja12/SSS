@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
-using SSS.Repository.Models;
+using SSS.Repositories.Models;
 using System.Collections.Generic;
 
 namespace SSS.Services;

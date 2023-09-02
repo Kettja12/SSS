@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SSS.Repository;
+using SSS.Repositories;
 using SSS.Services;
 using System.Runtime.CompilerServices;
 
@@ -13,7 +13,7 @@ namespace SSS.Extensions
             builder.Services.AddServerSideBlazor();
             builder.Services.AddLocalization();
             builder.Services.AddScoped<StateContainer>();
-            builder.Services.AddScoped<SSS.Repository.Repository>();
+            builder.Services.AddScoped<Repository>();
             var connectionstring = builder.Configuration.GetConnectionString("SSS");
             if (connectionstring == null) throw new Exception("No Connectionstring");
             builder.Services.AddDbContextFactory<SSSDatacontext>(opt =>

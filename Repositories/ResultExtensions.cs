@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace SSS.Repository;
+namespace SSS.Repositories;
 public static partial class SSSMapper
 {
     public static partial IQueryable<Models.Result> EFToUI(this IQueryable<dbModels.Result> q);

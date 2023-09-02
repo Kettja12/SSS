@@ -1,6 +1,6 @@
 ﻿using Riok.Mapperly.Abstractions;
 
-namespace SSS.Repository;
+namespace SSS.Repositories;
 
 [Mapper]
 public partial class SSSMapper

@@ -1,4 +1,4 @@
-﻿namespace SSS.Repository.dbModels;
+﻿namespace SSS.Repositories.Models;
 
 public class User
 {

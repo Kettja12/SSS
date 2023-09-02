@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace SSS.Repository;
+namespace SSS.Repositories;
 public partial class Repository
 {
     private IDbContextFactory<SSSDatacontext> factory;

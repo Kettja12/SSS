@@ -1,4 +1,4 @@
-﻿namespace SSS.Repository.Models;
+﻿namespace SSS.Repositories.dbModels;
 
 public class Result
 {
