@@ -1,45 +1,21 @@
 ﻿@page "/"
+@inject StateContainer stateContainer
+@inject Repository repository
+
 <PageTitle>Season Status</PageTitle>
 
 <h1>Season Status</h1>
-<div class="row mb-3">
-
-    <button type="button" class="btn btn-primary col-3" disabled="@(!category)" @onclick="()=>ToggleRaceData(false)">
-        <i class="fa-solid fa-sailboat mx-2" aria-hidden="true"></i>
-        <span>Racing 1  &gt 0,9000</span>
-    </button>
-    <button type="button" class="btn btn-primary col-3 mx-2" disabled="@(category)" @onclick="()=>ToggleRaceData(true)">
-        <i class="fa-solid fa-sailboat mx-2" aria-hidden="true"></i>
-        <span>Racing 2 &lt 0,9000</span>
-    </button>
-</div>
-<b class="mb-3">
-
-    @if (category)
-    {
-        <span class="">
-            Racing 2 &lt; 0,9000
-        </span>
-    }
-    else
-    {
-        <span class="">
-            Racing 1 &gt; 0,9000
-        </span>
-    }
+<b class="">
+    Racing 1 &gt; 0,9000
 </b>
-@code {
-    private bool category = false;
-    public bool DoSearch { get; set; } = true;
 
-    private void ToggleRaceData(bool category)
-    {
-        if (category != this.category)
-        {
-            this.category = category;
-            DoSearch = true;
-            StateHasChanged();
-        }
-    }
+<SeasonResultDetails Category=0/>
+<b class="">
+    Racing 2 &lt; 0,9000
+</b>
+
+<SeasonResultDetails Category=1/>
+
+@code {
 
 }

@@ -11986,3 +11986,14 @@ body {
 .dw-5 {
   max-width: 1080px !important;
 }
+
+.table thead {
+  top: 0;
+  position: sticky;
+  z-index: 1;
+}
+
+.table tr td:nth-child(1) {
+  position: sticky;
+  left: 0;
+}

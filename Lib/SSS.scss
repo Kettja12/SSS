@@ -23,5 +23,14 @@ $colwidhts: (0:0,1:$colwidht*0.5, 2:$colwidht*0.75,3:$colwidht*1,4:$colwidht*1.5
         max-width: $width !important;
     }
 }
+.table thead {
+    top: 0;
+    position: sticky;
+    z-index: 1;
+}
+.table tr td:nth-child(1){
+    position: sticky;
+    left: 0;
+}
 
 

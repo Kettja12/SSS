@@ -1,0 +1,91 @@
+﻿@inject StateContainer stateContainer
+@inject Repository repository
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Place</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Sailnumber</th>
+            <th>Skipper</th>
+            <th>Finnrating</th>
+            <th>Throwouts</th>
+            <th>throwout</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in summary)
+        {
+            <tr>
+                <td>@item.Position</td>
+                <td>@item.BoatName</td>
+                <td>@item.Type</td>
+                <td>@item.SailNumber</td>
+                <td>@item.Skipper</td>
+                <td>@item.Finnrating</td>
+                <td>@item.TrowOuts</td>
+                <td>@item.TrowOut</td>
+                <td>@item.Total</td>
+            </tr>
+        }
+
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public int Category { get; set; } = 0;
+    private List<SummaryItem> summary { get; set; } = new();
+    protected override async Task OnParametersSetAsync()
+    {
+        var results = await repository.GetAllResultsAsync();
+        var boats = await repository.GetBoatsAsync();
+        if (Category==0){
+            boats = boats.Where(x => x.Finnrating >= 0.9).ToList();
+        }
+        else
+        {
+            boats = boats.Where(x => x.Finnrating < 0.9).ToList();
+        }
+        summary = new();
+        foreach (var item in boats)
+        {
+            SummaryItem row = CalculateRow(results, item);
+            summary.Add(row);
+        }
+    }
+
+    private SummaryItem CalculateRow(List<Result> results, Boat boat)
+    {
+        foreach (var item in results.Where(x => x.BoatId == boat.Id).OrderBy(){
+            
+        }  
+        var newrow = new SummaryItem()
+            {
+                BoatId = boat.Id,
+                BoatName = boat.Name,
+                Type = boat.Type,
+                Skipper = boat.Skipper,
+                SailNumber = boat.SailNumber,
+                Finnrating = boat.Finnrating.ToString()
+            };
+        return newrow;
+    }
+
+    public class SummaryItem
+    {
+        public int Position { get; set; }
+        public int BoatId { get; set; }
+        public string BoatName { get; set; }
+        public string Type { get; set; }
+        public string Skipper { get; set; }
+        public string SailNumber { get; set; }
+        public string Finnrating { get; set; }
+        public List<int> Races { get; set; }
+        public string TrowOuts { get; set; }
+        public int TrowOut { get; set; }
+        public int Total { get; set; }
+    }
+}

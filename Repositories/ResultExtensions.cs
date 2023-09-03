@@ -27,6 +27,21 @@ public partial class Repository
         }
         return new List<Models.Result>();
     }
+    public async Task<List<Models.Result>> GetAllResultsAsync()
+    {
+        try
+        {
+            var context = factory.CreateDbContext();
+            return await context.Results
+                .EFToUI()
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.Message);
+        }
+        return new List<Models.Result>();
+    }
 
     public async Task<Models.Result> SaveResultAsync(Models.Result uiResult)
     {
