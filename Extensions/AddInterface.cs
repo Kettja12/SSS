@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BlazorPro.BlazorSize;
+using Microsoft.EntityFrameworkCore;
 using SSS.Repositories;
 using SSS.Services;
 using System.Runtime.CompilerServices;
@@ -18,6 +19,7 @@ namespace SSS.Extensions
             if (connectionstring == null) throw new Exception("No Connectionstring");
             builder.Services.AddDbContextFactory<SSSDatacontext>(opt =>
                 opt.UseSqlServer(connectionstring));
+            builder.Services.AddMediaQueryService();
 
 
         }

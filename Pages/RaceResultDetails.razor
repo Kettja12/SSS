@@ -4,7 +4,7 @@
 <table class="table">
     <thead>
         <tr>
-            <th>Place</th>
+            <th>Position</th>
             <th>Name</th>
             <th>Type</th>
             <th>Sailnumber</th>
@@ -20,7 +20,7 @@
         @foreach (var item in resultList)
         {
             <tr>
-                <td>@item.Place</td>
+                <td>@item.Position</td>
                 <td>@item.Name</td>
                 <td>@item.Type</td>
                 <td>@item.SailNumber</td>
@@ -35,73 +35,77 @@
 
     </tbody>
 </table>
-<h3>Start 2</h3>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Place</th>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Sailnumber</th>
-            <th>Skipper</th>
-            <th>Finnrating</th>
-            <th>StartTime</th>
-            <th>EndTime</th>
-            <th>SailTime</th>
-            <th>Fixed Time</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in resultList2)
-        {
+@if (resultList2.Any())
+{
+
+    <h3>Start 2</h3>
+    <table class="table">
+        <thead>
             <tr>
-                <td>@item.Place</td>
-                <td>@item.Name</td>
-                <td>@item.Type</td>
-                <td>@item.SailNumber</td>
-                <td>@item.Skipper</td>
-                <td>@item.Finnrating.ToString("0.0000")</td>
-                <td>@item.StartTime</td>
-                @if (item.DNF)
-                {
-                    <td>DNF</td>
-                }
-                else
-                {
-                    <td>@item.EndTime</td>
-                    <td>@item.SailTime</td>
-                    <td>@item.FixedTime</td>
-                }
+                <th>Place</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Sailnumber</th>
+                <th>Skipper</th>
+                <th>Finnrating</th>
+                <th>StartTime</th>
+                <th>EndTime</th>
+                <th>SailTime</th>
+                <th>Fixed Time</th>
             </tr>
-        }
+        </thead>
+        <tbody>
+            @foreach (var item in resultList2)
+            {
+                <tr>
+                    <td>@item.Position</td>
+                    <td>@item.Name</td>
+                    <td>@item.Type</td>
+                    <td>@item.SailNumber</td>
+                    <td>@item.Skipper</td>
+                    <td>@item.Finnrating.ToString("0.0000")</td>
+                    <td>@item.StartTime</td>
+                    @if (item.DNF)
+                    {
+                        <td>DNF</td>
+                    }
+                    else
+                    {
+                        <td>@item.EndTime</td>
+                        <td>@item.SailTime</td>
+                        <td>@item.FixedTime</td>
+                    }
+                </tr>
+            }
 
-    </tbody>
-</table>
+        </tbody>
+    </table>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Place</th>
-            <th>Name</th>
-            <th>Race 1</th>
-            <th>Race 2</th>
-            <th>Summary</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in summary)
-        {
+    <table class="table">
+        <thead>
             <tr>
-                <td>@item.Position</td>
-                <td>@item.BoatName</td>
-                <td>@item.Race1</td>
-                <td>@item.Race2</td>
-                <td>@item.Summary</td>
+                <th>Place</th>
+                <th>Name</th>
+                <th>Race 1</th>
+                <th>Race 2</th>
+                <th>Summary</th>
             </tr>
-        }
+        </thead>
+        <tbody>
+            @foreach (var item in summary)
+            {
+                <tr>
+                    <td>@item.Position</td>
+                    <td>@item.BoatName</td>
+                    <td>@item.Race1</td>
+                    <td>@item.Race2</td>
+                    <td>@item.Summary</td>
+                </tr>
+            }
 
-    </tbody>
-</table>
+        </tbody>
+    </table>
+}
 
 @code {
     [Parameter]
@@ -132,51 +136,52 @@
                 boats = boats.Where(x => x.Finnrating > 0.9).ToList();
             }
             if (boats.Any() == false) return;
-            List<ResultItem> tempResult = new();
+            resultList = new();
             foreach (var item in results)
             {
                 var boat = boats.FirstOrDefault(x => x.Id == item.BoatId) ?? new();
                 if (boat.Id == 0) continue;
-                ResultItem row = CalculateRow(item, boat);
-                tempResult.Add(row);
+                ResultItem row = CalculateRow(race,item, boat);
+                resultList.Add(row);
             }
-            resultList = tempResult.OrderBy(x => x.DNF).ThenBy(x => x.FixedTime).ToList();
+            resultList = resultList.OrderBy(x => x.DNF).ThenBy(x => x.FixedTime).ToList();
             int index = 1;
             results = await repository.GetResultsAsync(Id);
             foreach (var item in resultList)
             {
-                if (item.Place != index)
+                if (item.Position != index)
                 {
                     Result result = results.First(x => x.Id == item.Id);
-                    result.Place = index;
+                    result.PositionRace1 = index;
+                    result.Position = index;
                     await repository.SaveResultAsync(result);
                 }
-                item.Place = index;
+                item.Position = index;
                 index++;
             }
             resultList2 = new();
-            tempResult = new();
+            if (race.Name.StartsWith("Tiistaipurjehdus") == false) return;
             results = await repository.GetResultsAsync(Id);
             foreach (var item in results)
             {
                 var boat = boats.FirstOrDefault(x => x.Id == item.BoatId) ?? new();
                 if (boat.Id == 0) continue;
                 ResultItem row = CalculateRow2(item, boat);
-                tempResult.Add(row);
+                resultList2.Add(row);
             }
-            resultList2 = tempResult.OrderBy(x => x.DNF).ThenBy(x => x.FixedTime).ToList();
+            resultList2 = resultList2.OrderBy(x => x.DNF).ThenBy(x => x.FixedTime).ToList();
 
             index = 1;
             results = await repository.GetResultsAsync(Id);
             foreach (var item in resultList2)
             {
-                if (item.Place != index)
+                if (item.Position != index)
                 {
                     Result result = results.First(x => x.Id == item.Id);
-                    result.Place2 = index;
+                    result.PositionRace2 = index;
                     await repository.SaveResultAsync(result);
                 }
-                item.Place = index;
+                item.Position = index;
                 index++;
             }
             summary = new();
@@ -194,7 +199,7 @@
                     };
                 if (firstresult != null)
                 {
-                    summaryItem.Race1 = firstresult.Place;
+                    summaryItem.Race1 = firstresult.Position;
                     if (firstresult.DNS)
                     {
                         summaryItem.Race1 = boatcount1Race + 2;
@@ -210,7 +215,7 @@
                 }
                 if (nextresult != null)
                 {
-                    summaryItem.Race2 = nextresult.Place;
+                    summaryItem.Race2 = nextresult.Position;
                     if (nextresult.DNS)
                     {
                         summaryItem.Race2 = boatcount2Race + 2;
@@ -232,9 +237,9 @@
             {
                 item.Position = index;
                 var result = results.Where(x => x.BoatId == item.BoatId).First();
-                if (result.Postition != index)
+                if (result.Position != index)
                 {
-                    result.Postition = index;
+                    result.Position = index;
                     await repository.SaveResultAsync(result);
                 }
                 index++;
@@ -242,24 +247,30 @@
         }
     }
 
-    private ResultItem CalculateRow(Result item, Boat boat)
+    private ResultItem CalculateRow(Race race,Result item, Boat boat)
     {
         var newrow = new ResultItem()
             {
                 Id = item.Id,
                 BoatId = boat.Id,
-                Place = item.Place,
+                Position = item.PositionRace1,
                 Name = boat.Name,
                 Type = boat.Type,
                 Skipper = boat.Skipper,
                 SailNumber = boat.SailNumber,
                 Finnrating = boat.Finnrating
             };
-        if (item.FirstEndTime != null 
-            && race.StartTime!=null
-            && item.FirstEndTime!=null)
+        if (boat.Finnrating > 0.9)
         {
-            newrow.StartTime = race.StartTime.Value.TimeOfDay;
+            newrow.StartTime  = race.StartTime!.Value.TimeOfDay;
+        }
+        else
+        {
+            newrow.StartTime = race.StartTime2!.Value.TimeOfDay;
+  
+        }
+        if (item.FirstEndTime != null)
+        {
             newrow.EndTime = item.FirstEndTime.Value.TimeOfDay;
             newrow.SailTime = newrow.EndTime - newrow.StartTime;
             int seconds = (int)(newrow.SailTime.Value.TotalSeconds * boat.Finnrating);
@@ -277,7 +288,7 @@
             {
                 Id = item.Id,
                 BoatId = boat.Id,
-                Place = item.Place2,
+                Position = item.PositionRace2,
                 Name = boat.Name,
                 Type = boat.Type,
                 Skipper = boat.Skipper,
@@ -312,7 +323,7 @@
     {
         public int Id { get; set; }
         public int BoatId { get; set; }
-        public int Place { get; set; }
+        public int Position { get; set; }
         public string Name { get; set; }
         public string Type { get; set; }
         public string Skipper { get; set; }

@@ -9,12 +9,13 @@ public class Result
     public DateTime? SecondEndTime { get; set; }
     public bool DNF1 { get; set; }
     public bool DNS1 { get; set; }
-    public int Place { get; set; }
-    public int Place2 { get; set; }
     public bool DNF2 { get; set; }
     public bool DNS2 { get; set; }
     public bool Registration { get; set; }
-    public int Postition { get; set; }
+    public int Position { get; set; }
+    public int PositionRace1 { get; set; }
+    public int PositionRace2 { get; set; }
+
 
 
 }

@@ -1,67 +1,154 @@
 ﻿@inject StateContainer stateContainer
 @inject Repository repository
+<MediaQuery Media="@Breakpoints.OnlyMedium" @bind-Matches="IsMedium" />
+<MediaQuery Media="@Breakpoints.SmallDown" @bind-Matches="IsSmall" />
+@if (IsSmall)
+{
+    @foreach (var item in summary)
+    {
+        <div class="card">
+            <div class="card-body">
+                <label class="col-3">Place</label>
+                <label class="col-6">@item.Position</label>
+                <label class="col-3">Name</label>
+                <label class="col-8">@item.BoatName</label>
+                <label class="col-3">Type</label>
+                <label class="col-6">@item.Type</label>
+                <label class="col-3">Skipper</label>
+                <label class="col-6">@item.Skipper</label>
+                <label class="col-3">Finnrating</label>
+                <label class="col-6">@item.Finnrating</label>
+                <div>
+                    <div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Place</th>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Sailnumber</th>
-            <th>Skipper</th>
-            <th>Finnrating</th>
-            <th>Throwouts</th>
-            <th>throwout</th>
-            <th>Total</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in summary)
-        {
+                        @foreach (var race in races)
+                        {
+                            <label class="col-1">@race.ShortName</label>
+                        }
+                    </div>
+                    <div>
+
+                        @foreach (var points in item.Races)
+                        {
+                            <label class="col-1">@points</label>
+                        }
+                    </div>
+                </div>
+                <div>
+                    <label class="col-3">
+                        Throwouts
+                        @if (throwOuts > 0)
+                        {
+                            <span>: @throwOuts</span>
+                        }
+                    </label>
+                    <label class="col-6">@item.TrowOuts</label>
+                    <label class="col-3">throwout</label>
+                    <label class="col-6">@item.TrowOut</label>
+                    <label class="col-3">Total</label>
+                    <label class="col-6">@item.Total</label>
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+
+    <table class="table">
+        <thead>
             <tr>
-                <td>@item.Position</td>
-                <td>@item.BoatName</td>
-                <td>@item.Type</td>
-                <td>@item.SailNumber</td>
-                <td>@item.Skipper</td>
-                <td>@item.Finnrating</td>
-                <td>@item.TrowOuts</td>
-                <td>@item.TrowOut</td>
-                <td>@item.Total</td>
+                <th>Place</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Sailnumber</th>
+                <th>Skipper</th>
+                <th>Finnrating</th>
+                @foreach (var item in races)
+                {
+                    <th>@item.ShortName</th>
+                }
+                <th>
+                    Throwouts
+                    @if (throwOuts > 0)
+                    {
+                        <span>: @throwOuts</span>
+                    }
+                </th>
+                <th>throwout</th>
+                <th>Total</th>
             </tr>
-        }
+        </thead>
+        <tbody>
+            @foreach (var item in summary)
+            {
+                <tr>
+                    <td>@item.Position</td>
+                    <td>@item.BoatName</td>
+                    <td>@item.Type</td>
+                    <td>@item.SailNumber</td>
+                    <td>@item.Skipper</td>
+                    <td>@item.Finnrating</td>
+                    @foreach (var points in item.Races)
+                    {
+                        <td>@points</td>
+                    }
+                    <td>@item.TrowOuts</td>
+                    <td>@item.TrowOut</td>
+                    <td>@item.Total</td>
 
-    </tbody>
-</table>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+}
+
 
 @code {
     [Parameter]
     public int Category { get; set; } = 0;
+    bool IsMedium = false;
+    bool IsSmall = false;
+
+    private List<Race> races = new();
+    private int raceCount = 0;
+    private int throwOuts = 0;
     private List<SummaryItem> summary { get; set; } = new();
     protected override async Task OnParametersSetAsync()
     {
+        races = await repository.GetRacesAsync();
+        races = races.OrderBy(x => x.StartTime).ToList();
         var results = await repository.GetAllResultsAsync();
         var boats = await repository.GetBoatsAsync();
-        if (Category==0){
+        throwOuts = races.Max(x => x.ThrowOuts);
+        if (Category == 0)
+        {
             boats = boats.Where(x => x.Finnrating >= 0.9).ToList();
         }
         else
         {
             boats = boats.Where(x => x.Finnrating < 0.9).ToList();
         }
+        List<int> boatIds = boats.Select(y => y.Id).ToList();
+        results = results.Where(x => boatIds.Contains(x.BoatId)).ToList();
         summary = new();
         foreach (var item in boats)
         {
-            SummaryItem row = CalculateRow(results, item);
+            SummaryItem row = CalculateRow(races, results, item);
             summary.Add(row);
+        }
+        summary = summary.OrderBy(x => x.Total).ThenBy(x => x.Races.Last()).ToList();
+        int index = 1;
+        foreach (var item in summary)
+        {
+            item.Position = index;
+            index++;
         }
     }
 
-    private SummaryItem CalculateRow(List<Result> results, Boat boat)
+    private SummaryItem CalculateRow(List<Race> races, List<Result> results, Boat boat)
     {
-        foreach (var item in results.Where(x => x.BoatId == boat.Id).OrderBy(){
-            
-        }  
         var newrow = new SummaryItem()
             {
                 BoatId = boat.Id,
@@ -69,8 +156,25 @@
                 Type = boat.Type,
                 Skipper = boat.Skipper,
                 SailNumber = boat.SailNumber,
-                Finnrating = boat.Finnrating.ToString()
+                Finnrating = boat.Finnrating.ToString(),
+                Races = new()
             };
+
+        foreach (var race in races)
+        {
+            int boatsInRace = results.Count(x => x.RaceId == race.Id);
+            var result = results.Where(x => x.BoatId == boat.Id && x.RaceId == race.Id).FirstOrDefault();
+            if (result != null)
+            {
+                newrow.Races.Add(result.Position);
+            }
+            else
+            {
+                newrow.Races.Add(boatsInRace + 2);
+            }
+        }
+        var points = newrow.Races.Sum();
+        newrow.Total = points;
         return newrow;
     }
 

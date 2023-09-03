@@ -43,21 +43,25 @@
             color: white;
         }
 
-@media (min-width: 720px) {
+@media (min-width: 768px) {
 
     sidebar {
         width: 250px;
+        min-width: 250px;
         height: 100vh;
         position: sticky;
         top: 0;
     }
+
     .navbar-toggler {
         display: none;
     }
+
     .collapse {
         /* Never collapse the sidebar for wide screens */
         display: block;
     }
+
     .nav-scrollable {
         /* Allow sidebar to scroll for tall menus */
         height: calc(100vh - 3.5rem);

@@ -31,9 +31,21 @@
                 <label class="form-label">Race Name</label>
                 <input type="text" class="form-control" @bind="currentRace.Name">
             </div>
-            <div class="mb-3" style="width:300px">
-                <label class="form-label">Start Time</label>
-                <input type="text" class="form-control" @bind="currentRace.StartTime">
+            <div class="mb-3" style="width:150px">
+                <label class="form-label">Race Shortname</label>
+                <input type="text" class="form-control" @bind="currentRace.ShortName">
+            </div>
+            <div class="mb-3" style="width:150px">
+                <label class="form-label">Race Day</label>
+                <input type="text" class="form-control" @bind="raceday">
+            </div>
+            <div class="mb-3" style="width:150px">
+                <label class="form-label">Start Time R1</label>
+                <input type="text" class="form-control" @bind="startR1">
+            </div>
+            <div class="mb-3" style="width:150px">
+                <label class="form-label">Start Time R2</label>
+                <input type="text" class="form-control" @bind="startR2">
             </div>
             <button type="button" class="btn btn-primary mb-3 mt-5 col-3" @onclick="SaveRaceData">Save</button>
         </form>
@@ -61,10 +73,19 @@
                 </div>
             }
 
-            <div class="mb-3" style="width:200px">
-                <label class="form-label">Race Start</label>
-                <label class="form-control">@currentRace.StartTime.ToString()</label>
+            <div class="mb-3" style="width:150px">
+                <label class="form-label">Race Day</label>
+                <label class="form-control">@raceday</label>
             </div>
+            <div class="mb-3" style="width:150px">
+                <label class="form-label">Start Time R1</label>
+                <label class="form-control">@startR1</label> 
+            </div>
+            <div class="mb-3" style="width:150px">
+                <label class="form-label">Start Time R2</label>
+                <label class="form-control">@startR2</label> 
+            </div>
+
             @if (stateContainer.CurrentUser.Id == 1)
             {
                 <div class="col-3 mb-3">
@@ -137,6 +158,9 @@
     private List<Boat> boats { get; set; } = new();
     private List<Race> races { get; set; } = new();
     private Race currentRace { get; set; } = new();
+    private DateOnly? raceday { get; set; }
+    private TimeSpan? startR1 { get; set; }
+    private TimeSpan? startR2 { get; set; }
     private TimeSpan? end1 { get; set; }
     private TimeSpan? end2 { get; set; }
     private bool viewRaceData { get; set; } = false;
@@ -179,6 +203,19 @@
             {
                 end2 = currentResult.SecondEndTime.Value.TimeOfDay;
             }
+            raceday = null;
+            if (currentRace.RaceDay != null)
+            {
+                raceday = DateOnly.FromDateTime(currentRace.RaceDay.Value);
+            }
+            if (currentRace.StartTime != null)
+            {
+                startR1 = currentRace.StartTime.Value.TimeOfDay;
+            }
+            if (currentRace.StartTime2 != null)
+            {
+                startR2 = currentRace.StartTime2.Value.TimeOfDay;
+            }
             StateHasChanged();
         }
     }
@@ -196,6 +233,16 @@
     private async Task SaveRaceData()
     {
         viewRaceData = !viewRaceData;
+        currentRace.RaceDay = raceday != null 
+            ? raceday.Value.ToDateTime(TimeOnly.MinValue) 
+            : (DateTime?)null;
+
+        if (currentRace.RaceDay != null)
+        {
+            currentRace.StartTime = startR1 != null ? currentRace.RaceDay.Value.Add(startR1.Value) : (DateTime?)null;
+            currentRace.StartTime2 = startR2 != null ? currentRace.RaceDay.Value.Add(startR2.Value) : (DateTime?)null;
+        }
+
         await repository.SaveRaceAsync(currentRace);
         races = await repository.GetRacesAsync();
         currentRace = races.FirstOrDefault() ?? new();

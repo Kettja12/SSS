@@ -49,12 +49,19 @@
             StateHasChanged();
         }
     }
+    protected override async Task OnParametersSetAsync()
+    {
+        race = await repository.GetRaceAsync(Id);
+
+    }
+
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            race = await repository.GetRaceAsync(Id);
-        }
+        // if (race.Id!=Id)
+        // {
+        //     race = await repository.GetRaceAsync(Id);
+        // }
     }
 
 }
