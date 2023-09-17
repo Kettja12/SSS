@@ -66,16 +66,16 @@ else
                 <th>Finnrating</th>
                 @foreach (var item in races)
                 {
+                    if (item.ShortName == "KVR2" || item.ShortName == "KVR3") continue;
                     <th>@item.ShortName</th>
                 }
-                <th>
-                    Throwouts
-                    @if (throwOuts > 0)
-                    {
+                @if (throwOuts > 0)
+                {
+                    <th colspan="2">
+                        Throwouts
                         <span>: @throwOuts</span>
-                    }
-                </th>
-                <th>throwout</th>
+                        </th>
+                }
                 <th>Total</th>
             </tr>
         </thead>
@@ -91,10 +91,13 @@ else
                     <td>@item.Finnrating</td>
                     @foreach (var points in item.Races)
                     {
-                        <td>@points</td>
+                        <td><span class="ms-2">@points</span></td>
                     }
-                    <td>@item.TrowOuts</td>
-                    <td>@item.TrowOut</td>
+                    @if (throwOuts > 0)
+                    {
+                        <td><span class="ms-3">@item.TrowOuts</span></td>
+                        <td>@item.TrowOut</td>
+                    }
                     <td>@item.Total</td>
 
                 </tr>
@@ -121,7 +124,15 @@ else
         races = races.OrderBy(x => x.StartTime).ToList();
         var results = await repository.GetAllResultsAsync();
         var boats = await repository.GetBoatsAsync();
-        throwOuts = races.Max(x => x.ThrowOuts);
+        try
+        {
+            throwOuts = races.Max(x => x.ThrowOuts);
+
+        }
+        catch (Exception e)
+        {
+            throwOuts = 0;
+        }
         if (Category == 0)
         {
             boats = boats.Where(x => x.Finnrating >= 0.9).ToList();
@@ -162,6 +173,7 @@ else
 
         foreach (var race in races)
         {
+            if (race.ShortName == "KVR2" || race.ShortName == "KVR3") continue;
             int boatsInRace = results.Count(x => x.RaceId == race.Id);
             var result = results.Where(x => x.BoatId == boat.Id && x.RaceId == race.Id).FirstOrDefault();
             if (result != null)
@@ -174,7 +186,12 @@ else
             }
         }
         var points = newrow.Races.Sum();
-        newrow.Total = points;
+        if (throwOuts > 0){
+            var throwoutList = newrow.Races.OrderByDescending(x=>x).Take(throwOuts).ToList();
+            newrow.TrowOuts = string.Join(",", throwoutList); 
+            newrow.TrowOut = throwoutList.Sum();
+        }
+        newrow.Total = points - newrow.TrowOut;
         return newrow;
     }
 

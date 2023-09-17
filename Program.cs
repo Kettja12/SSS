@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using SSS.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.AddIntefrace();
+builder.AddDepedencies();
 var app = builder.Build();
-app.AddRouting();
+app.AddInterfaces();
 app.Run();

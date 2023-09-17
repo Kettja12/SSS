@@ -22,6 +22,20 @@ namespace SSS.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("SSS.Repositories.AppSetting", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SValue")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("AppSettings");
+                });
+
             modelBuilder.Entity("SSS.Repositories.dbModels.Boat", b =>
                 {
                     b.Property<int>("Id")
@@ -117,12 +131,6 @@ namespace SSS.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("Position")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PositionRace1")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PositionRace2")
                         .HasColumnType("int");
 
                     b.Property<int>("RaceId")

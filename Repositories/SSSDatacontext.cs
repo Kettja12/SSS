@@ -20,6 +20,7 @@ namespace SSS.Repositories
         public virtual DbSet<Boat> Boats { get; set; }
         public virtual DbSet<Race> Races { get; set; }
         public virtual DbSet<Result> Results { get; set; }
+        public virtual DbSet<AppSetting> AppSettings { get; set; }
     }
 
 }

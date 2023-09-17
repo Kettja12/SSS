@@ -10,6 +10,24 @@ public static partial class SSSMapper
 
 public partial class Repository
 {
+    public async Task<Models.Result> GetResultAsync(int Id)
+    {
+        try
+        {
+
+            var context = factory.CreateDbContext();
+            return await context.Results
+                .Where(x => x.Id == Id)
+                .EFToUI()
+                .FirstAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.Message);
+        }
+        return new Models.Result();
+    }
+
     public async Task<List<Models.Result>> GetResultsAsync(int raceId)
     {
         try

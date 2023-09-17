@@ -13,8 +13,5 @@ public class Result
     public bool DNS2 { get; set; }
     public bool Registration { get; set; }
     public int Position { get; set; }
-    public int PositionRace1 { get; set; }
-    public int PositionRace2 { get; set; }
-
 
 }

@@ -31,5 +31,12 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     }
-  }
+  },
+  //"Kestrel": {
+  //  "EndPoints": {
+  //    "Http": {
+  //      "Url": "https://192.168.43.217:7116" // Use HTTP without HTTPS
+  //    }
+  //  }
+  //}
 }

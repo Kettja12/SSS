@@ -47,6 +47,11 @@
                 <label class="form-label">Start Time R2</label>
                 <input type="text" class="form-control" @bind="startR2">
             </div>
+            <div class="mb-3" style="width:75px">
+                <label class="form-label">Throwouts</label>
+                <input type="text" class="form-control" @bind="@currentRace.ThrowOuts">
+            </div>
+
             <button type="button" class="btn btn-primary mb-3 mt-5 col-3" @onclick="SaveRaceData">Save</button>
         </form>
     }
@@ -85,6 +90,10 @@
                 <label class="form-label">Start Time R2</label>
                 <label class="form-control">@startR2</label> 
             </div>
+            <div class="mb-3" style="width:75px">
+                <label class="form-label">Throwouts</label>
+                <label class="form-control">@currentRace.ThrowOuts</label>
+            </div>
 
             @if (stateContainer.CurrentUser.Id == 1)
             {
@@ -115,6 +124,7 @@
             <div class="mb-3 " style="width:150px">
                 <label class="form-label">Endtime 1</label>
                 <input type="text" class="form-control" @bind="end1">
+
             </div>
 
             <div class="mb-3 " style="width:150px">
@@ -181,6 +191,8 @@
             races = await repository.GetRacesAsync();
             end1 = null;
             end2 = null;
+            startR1 = null;
+            startR2 = null;
             if (stateContainer.CurrentUser.Id == 1)
             {
                 boats = await repository.GetBoatsAsync();
@@ -253,6 +265,22 @@
         if (int.TryParse(selectEvent.Value.ToString(), out selectedRaceId))
         {
             currentRace = races.FirstOrDefault(x => x.Id == selectedRaceId) ?? new();
+            startR1 = null;
+            startR2 = null;
+            if (currentRace.StartTime != null)
+            {
+                startR1 = currentRace.StartTime.Value.TimeOfDay;
+            }
+            if (currentRace.StartTime2 != null)
+            {
+                startR2 = currentRace.StartTime2.Value.TimeOfDay;
+            }
+            raceday = null;
+            if (currentRace.RaceDay != null)
+            {
+                raceday = DateOnly.FromDateTime(currentRace.RaceDay.Value);
+            }
+
             raceesults = await repository.GetResultsAsync(selectedRaceId);
             currentResult = raceesults.Where(x => x.BoatId == selectedBoatId).FirstOrDefault() ?? new();
             end1 = null;
@@ -296,6 +324,8 @@
         if (currentRace.StartTime != null)
         {
             var date = currentRace.StartTime.Value.Date;
+            currentResult.FirstEndTime = null;
+            currentResult.SecondEndTime = null;
             if (end1 != null)
             {
                 currentResult.FirstEndTime = date.Add(end1.Value);

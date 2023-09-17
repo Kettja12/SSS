@@ -31,15 +31,15 @@
             <h1>Edit Boat Data</h1>
             <div class="mb-3" style="width:300px">
                 <label class="form-label">Name</label>
-                <input type="text" class="form-control" @bind="currentUserBoat.Name">
+                <InputText class="form-control" @bind-Value="currentUserBoat.Name"/> 
             </div>
             <div class="mb-3" style="width:300px">
                 <label class="form-label">Type</label>
-                <input type="text" class="form-control" @bind="currentUserBoat.Type">
+                <InputText class="form-control" @bind-Value="currentUserBoat.Type"/>
             </div>
             <div class="mb-3" style=" width:100px">
                 <label class="form-label">Sailnumber</label>
-                <input type="text" class="form-control" @bind="currentUserBoat.SailNumber">
+                <InputText class="form-control" @bind-Value="currentUserBoat.SailNumber"/>
             </div>
             <div class="mb-3 " style="width:300px">
                 <label class="form-label">Skipper</label>

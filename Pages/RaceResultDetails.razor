@@ -1,111 +1,24 @@
-﻿@inject StateContainer stateContainer
+﻿@using Microsoft.EntityFrameworkCore;
+@inject StateContainer stateContainer
 @inject Repository repository
-<h3>Start 1</h3>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Position</th>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Sailnumber</th>
-            <th>Skipper</th>
-            <th>Finnrating</th>
-            <th>StartTime</th>
-            <th>EndTime</th>
-            <th>SailTime</th>
-            <th>Fixed Time</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in resultList)
-        {
-            <tr>
-                <td>@item.Position</td>
-                <td>@item.Name</td>
-                <td>@item.Type</td>
-                <td>@item.SailNumber</td>
-                <td>@item.Skipper</td>
-                <td>@item.Finnrating.ToString("0.0000")</td>
-                <td>@item.StartTime</td>
-                <td>@item.EndTime</td>
-                <td>@item.SailTime</td>
-                <td>@item.FixedTime</td>
-            </tr>
-        }
-
-    </tbody>
-</table>
+@inject IDbContextFactory<SSSDatacontext> factory
+@if (resultList1.Any())
+{
+    <RaceResultList ResultList="resultList1" Title="Start 1"></RaceResultList>
+}
 @if (resultList2.Any())
 {
-
-    <h3>Start 2</h3>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Place</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Sailnumber</th>
-                <th>Skipper</th>
-                <th>Finnrating</th>
-                <th>StartTime</th>
-                <th>EndTime</th>
-                <th>SailTime</th>
-                <th>Fixed Time</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in resultList2)
-            {
-                <tr>
-                    <td>@item.Position</td>
-                    <td>@item.Name</td>
-                    <td>@item.Type</td>
-                    <td>@item.SailNumber</td>
-                    <td>@item.Skipper</td>
-                    <td>@item.Finnrating.ToString("0.0000")</td>
-                    <td>@item.StartTime</td>
-                    @if (item.DNF)
-                    {
-                        <td>DNF</td>
-                    }
-                    else
-                    {
-                        <td>@item.EndTime</td>
-                        <td>@item.SailTime</td>
-                        <td>@item.FixedTime</td>
-                    }
-                </tr>
-            }
-
-        </tbody>
-    </table>
-
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Place</th>
-                <th>Name</th>
-                <th>Race 1</th>
-                <th>Race 2</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in summary)
-            {
-                <tr>
-                    <td>@item.Position</td>
-                    <td>@item.BoatName</td>
-                    <td>@item.Race1</td>
-                    <td>@item.Race2</td>
-                    <td>@item.Summary</td>
-                </tr>
-            }
-
-        </tbody>
-    </table>
+    <RaceResultList ResultList="resultList2" Title="Start 2"></RaceResultList>
 }
+@if (resultList3.Any())
+{
+    <RaceResultList ResultList="resultList3" Title="Start 3"></RaceResultList>
+}
+@if (summary.Any())
+{
+    <RaceSummary Summary="summary" Racecount="RaceCount"></RaceSummary>
+}
+
 
 @code {
     [Parameter]
@@ -116,17 +29,22 @@
     public bool Category { get; set; } = false;
 
     private Race race { get; set; } = new();
-    private List<ResultItem> resultList { get; set; } = new();
-    private List<ResultItem> resultList2 { get; set; } = new();
-    private List<SummaryItem> summary { get; set; } = new();
+    public List<ResultItem> resultList1 { get; set; } = new();
+    public List<ResultItem> resultList2 { get; set; } = new();
+    public List<ResultItem> resultList3 { get; set; } = new();
+    public List<SummaryItem> summary { get; set; } = new();
+    public int RaceCount { get; set; } = 0;
     protected override async Task OnParametersSetAsync()
     {
         if (DoSearch)
         {
             DoSearch = false;
-            race = await repository.GetRaceAsync(Id);
-            var results = await repository.GetResultsAsync(Id);
-            var boats = await repository.GetBoatsAsync();
+            summary = new();
+            resultList1 = new();
+            resultList2 = new();
+            resultList3 = new();
+            RaceCount = 1;
+            List<Boat> boats = await repository.GetBoatsAsync() ?? new();
             if (Category)
             {
                 boats = boats.Where(x => x.Finnrating < 0.9).ToList();
@@ -136,124 +54,167 @@
                 boats = boats.Where(x => x.Finnrating > 0.9).ToList();
             }
             if (boats.Any() == false) return;
-            resultList = new();
-            foreach (var item in results)
+            var races = await repository.GetRacesAsync();
+            race = races.FirstOrDefault(x => x.Id == Id) ?? new();
+            if (race.ShortName == "KVR")
             {
-                var boat = boats.FirstOrDefault(x => x.Id == item.BoatId) ?? new();
-                if (boat.Id == 0) continue;
-                ResultItem row = CalculateRow(race,item, boat);
-                resultList.Add(row);
+                resultList1 = await BuildRaceList(boats, race, RaceCount);
             }
-            resultList = resultList.OrderBy(x => x.DNF).ThenBy(x => x.FixedTime).ToList();
-            int index = 1;
-            results = await repository.GetResultsAsync(Id);
-            foreach (var item in resultList)
+            else if (race.ShortName == "KVR2")
             {
-                if (item.Position != index)
-                {
-                    Result result = results.First(x => x.Id == item.Id);
-                    result.PositionRace1 = index;
-                    result.Position = index;
-                    await repository.SaveResultAsync(result);
-                }
-                item.Position = index;
-                index++;
+                race = races.FirstOrDefault(x => x.ShortName == "KVR") ?? new();
+                resultList1 = await BuildRaceList(boats, race, RaceCount++);
+                race = races.FirstOrDefault(x => x.ShortName == "KVR2") ?? new();
+                resultList2 = await BuildRaceList(boats, race, RaceCount);
             }
-            resultList2 = new();
-            if (race.Name.StartsWith("Tiistaipurjehdus") == false) return;
-            results = await repository.GetResultsAsync(Id);
-            foreach (var item in results)
+            else if (race.ShortName == "KVR3")
             {
-                var boat = boats.FirstOrDefault(x => x.Id == item.BoatId) ?? new();
-                if (boat.Id == 0) continue;
-                ResultItem row = CalculateRow2(item, boat);
-                resultList2.Add(row);
+                race = races.FirstOrDefault(x => x.ShortName == "KVR") ?? new();
+                resultList1 = await BuildRaceList(boats, race, RaceCount++);
+                race = races.FirstOrDefault(x => x.ShortName == "KVR2") ?? new();
+                resultList2 = await BuildRaceList(boats, race, RaceCount++);
+                race = races.FirstOrDefault(x => x.ShortName == "KVR3") ?? new();
+                resultList3 = await BuildRaceList(boats, race, RaceCount);
             }
-            resultList2 = resultList2.OrderBy(x => x.DNF).ThenBy(x => x.FixedTime).ToList();
-
-            index = 1;
-            results = await repository.GetResultsAsync(Id);
-            foreach (var item in resultList2)
+            else if (race.Name.StartsWith("Tiistai"))
             {
-                if (item.Position != index)
-                {
-                    Result result = results.First(x => x.Id == item.Id);
-                    result.PositionRace2 = index;
-                    await repository.SaveResultAsync(result);
-                }
-                item.Position = index;
-                index++;
+                resultList1 = await BuildRaceList(boats, race, RaceCount++);
+                resultList2 = await BuildFlyStartRaceList(boats, race);
             }
-            summary = new();
-            var boatcount1Race = resultList.Where(x => x.DNS == false).Count();
-            var boatcount2Race = resultList2.Where(x => x.DNS == false).Count();
-            foreach (var item in boats)
+            else
             {
-                var firstresult = resultList.Where(x => x.BoatId == item.Id).FirstOrDefault();
-                var nextresult = resultList2.Where(x => x.BoatId == item.Id).FirstOrDefault();
-                if (firstresult == null || nextresult == null) continue;
-                SummaryItem summaryItem = new()
-                    {
-                        BoatId = item.Id,
-                        BoatName = item.Name
-                    };
-                if (firstresult != null)
-                {
-                    summaryItem.Race1 = firstresult.Position;
-                    if (firstresult.DNS)
-                    {
-                        summaryItem.Race1 = boatcount1Race + 2;
-                    }
-                    if (firstresult.DNF)
-                    {
-                        summaryItem.Race1 = boatcount1Race + 1;
-                    }
-                }
-                else
-                {
-                    summaryItem.Race1 = boatcount1Race + 2;
-                }
-                if (nextresult != null)
-                {
-                    summaryItem.Race2 = nextresult.Position;
-                    if (nextresult.DNS)
-                    {
-                        summaryItem.Race2 = boatcount2Race + 2;
-                    }
-                    if (nextresult.DNF)
-                    {
-                        summaryItem.Race2 = boatcount2Race + 1;
-                    }
-                }
-                else
-                {
-                    summaryItem.Race2 = boatcount2Race + 2;
-                }
-                summary.Add(summaryItem);
+                resultList1 = await BuildRaceList(boats, race, RaceCount);
             }
-            summary = summary.OrderBy(x => x.Summary).ThenBy(x => x.Race2).ToList();
-            index = 1;
+            summary = summary.OrderBy(x => x.Summary).ThenBy(x => x.Race3).ThenBy(x => x.Race2).ThenBy(x => x.Race1).ToList();
+            var index = 1;
             foreach (var item in summary)
             {
                 item.Position = index;
-                var result = results.Where(x => x.BoatId == item.BoatId).First();
-                if (result.Position != index)
+                var result = await repository.GetResultAsync(item.RaceId);
+                if (index != result.Position)
                 {
                     result.Position = index;
                     await repository.SaveResultAsync(result);
                 }
                 index++;
             }
+            StateHasChanged();
         }
     }
 
-    private ResultItem CalculateRow(Race race,Result item, Boat boat)
+    private async Task<List<ResultItem>> BuildRaceList(List<Boat> boats, Race race, int start)
+    {
+        List<ResultItem> resultList = new();
+        var results = await repository.GetResultsAsync(race.Id);
+        foreach (var item in results)
+        {
+            var boat = boats.FirstOrDefault(x => x.Id == item.BoatId) ?? new();
+            if (boat.Id == 0) continue;
+            ResultItem row = CalculateRow(race, item, boat);
+            resultList.Add(row);
+        }
+        resultList = resultList.OrderBy(x => x.DNF).ThenBy(x => x.FixedTime).ToList();
+        int index = 1;
+        foreach (var item in resultList)
+        {
+            if (item.Position != index)
+            {
+                if (item.DNF)
+                {
+                    item.Position = resultList.Count() + 1;
+                }
+                else
+                {
+                    item.Position = index;
+                }
+            }
+            index++;
+        }
+        await addRaceToSummary(start, resultList);
+        return resultList;
+    }
+
+    private async Task<List<ResultItem>> BuildFlyStartRaceList(List<Boat> boats, Race race)
+    {
+        List<ResultItem> resultList = new();
+        var results = await repository.GetResultsAsync(race.Id);
+        foreach (var item in results)
+        {
+            var boat = boats.FirstOrDefault(x => x.Id == item.BoatId) ?? new();
+            if (boat.Id == 0) continue;
+            ResultItem row = CalculateRow2(item, boat);
+            resultList.Add(row);
+        }
+        resultList = resultList.OrderBy(x => x.DNF).ThenBy(x => x.FixedTime).ToList();
+        int index = 1;
+        foreach (var item in resultList)
+        {
+            if (item.Position != index)
+            {
+                if (item.DNF)
+                {
+                    item.Position = resultList.Count() + 1;
+                }
+                else
+                {
+                    item.Position = index;
+                }
+            }
+            index++;
+        }
+        await addRaceToSummary(2, resultList);
+        return resultList;
+    }
+    private async Task addRaceToSummary(int start, List<ResultItem> results)
+    {
+
+
+        foreach (var item in results)
+        {
+            SummaryItem summaryItem = summary.Where(x => x.BoatId == item.BoatId).FirstOrDefault();
+            if (summaryItem == null)
+            {
+                summaryItem = new()
+                    {
+                        BoatId = item.BoatId,
+                        RaceId = item.Id,
+                        BoatName = item.Name
+                    };
+                summary.Add(summaryItem);
+            }
+            switch (start)
+            {
+                case 1: summaryItem.Race1 = item.Position; break;
+                case 2: summaryItem.Race2 = item.Position; break;
+                case 3: summaryItem.Race3 = item.Position; break;
+
+            }
+        }
+        // resultList = resultList.OrderBy(x => x.DNF).ThenBy(x => x.FixedTime).ToList();
+        // int index = 1;
+        // results = await repository.GetResultsAsync(Id);
+        // foreach (var item in resultList)
+        // {
+        //     if (item.Position != index)
+        //     {
+        //         Result result = results.First(x => x.Id == item.Id);
+        //         result.PositionRace1 = index;
+        //         result.Position = index;
+        //         //await repository.SaveResultAsync(result);
+        //     }
+        //     item.Position = index;
+        //     index++;
+        // }
+        // if (race.Name.StartsWith("Tiistaipurjehdus")) await AddWeeklyraceNextWeek(Id, results, boats);
+        // if (nextRaceId > 0) await AddJoinedRace(nextRaceId, boats);
+
+    }
+    private ResultItem CalculateRow(Race race, Result item, Boat boat)
     {
         var newrow = new ResultItem()
             {
                 Id = item.Id,
                 BoatId = boat.Id,
-                Position = item.PositionRace1,
                 Name = boat.Name,
                 Type = boat.Type,
                 Skipper = boat.Skipper,
@@ -262,12 +223,12 @@
             };
         if (boat.Finnrating > 0.9)
         {
-            newrow.StartTime  = race.StartTime!.Value.TimeOfDay;
+            newrow.StartTime = race.StartTime!.Value.TimeOfDay;
         }
         else
         {
             newrow.StartTime = race.StartTime2!.Value.TimeOfDay;
-  
+
         }
         if (item.FirstEndTime != null)
         {
@@ -279,6 +240,7 @@
         else
         {
             newrow.DNF = true;
+            newrow.FixedTime = TimeSpan.MaxValue;
         }
         return newrow;
     }
@@ -288,7 +250,6 @@
             {
                 Id = item.Id,
                 BoatId = boat.Id,
-                Position = item.PositionRace2,
                 Name = boat.Name,
                 Type = boat.Type,
                 Skipper = boat.Skipper,
@@ -319,6 +280,174 @@
         return newrow;
     }
 
+    // private async Task<Boolean> AddWeeklyraceNextWeek(int raceId, List<Result> results, List<Boat> boats)
+    // {
+    //     foreach (var item in results)
+    //     {
+    //         var boat = boats.FirstOrDefault(x => x.Id == item.BoatId) ?? new();
+    //         if (boat.Id == 0) continue;
+    //         ResultItem row = CalculateRow2(item, boat);
+    //         resultList2.Add(row);
+    //     }
+    //     resultList2 = resultList2.OrderBy(x => x.DNF).ThenBy(x => x.FixedTime).ToList();
+
+    //     var index = 1;
+    //     foreach (var item in resultList2)
+    //     {
+    //         if (item.Position != index)
+    //         {
+    //             Result result = results.First(x => x.Id == item.Id);
+    //             result.PositionRace2 = index;
+    //             await repository.SaveResultAsync(result);
+    //         }
+    //         item.Position = index;
+    //         index++;
+    //     }
+    //     var boatcount1Race = resultList.Where(x => x.DNS == false).Count();
+    //     var boatcount2Race = resultList2.Where(x => x.DNS == false).Count();
+    //     foreach (var item in boats)
+    //     {
+    //         var firstresult = resultList.Where(x => x.BoatId == item.Id).FirstOrDefault();
+    //         var nextresult = resultList2.Where(x => x.BoatId == item.Id).FirstOrDefault();
+    //         if (firstresult == null || nextresult == null) continue;
+    //         SummaryItem summaryItem = new()
+    //             {
+    //                 BoatId = item.Id,
+    //                 BoatName = item.Name
+    //             };
+    //         if (firstresult != null)
+    //         {
+    //             summaryItem.Race1 = firstresult.Position;
+    //             if (firstresult.DNS)
+    //             {
+    //                 summaryItem.Race1 = boatcount1Race + 2;
+    //             }
+    //             if (firstresult.DNF)
+    //             {
+    //                 summaryItem.Race1 = boatcount1Race + 1;
+    //             }
+    //         }
+    //         else
+    //         {
+    //             summaryItem.Race1 = boatcount1Race + 2;
+    //         }
+    //         if (nextresult != null)
+    //         {
+    //             summaryItem.Race2 = nextresult.Position;
+    //             if (nextresult.DNS)
+    //             {
+    //                 summaryItem.Race2 = boatcount2Race + 2;
+    //             }
+    //             if (nextresult.DNF)
+    //             {
+    //                 summaryItem.Race2 = boatcount2Race + 1;
+    //             }
+    //         }
+    //         else
+    //         {
+    //             summaryItem.Race2 = boatcount2Race + 2;
+    //         }
+    //         summary.Add(summaryItem);
+    //     }
+    //     summary = summary.OrderBy(x => x.Summary).ThenBy(x => x.Race2).ToList();
+    //     index = 1;
+    //     foreach (var item in summary)
+    //     {
+    //         item.Position = index;
+    //         var result = results.Where(x => x.BoatId == item.BoatId).First();
+    //         if (result.Position != index)
+    //         {
+    //             result.Position = index;
+    //             //await repository.SaveResultAsync(result);
+    //         }
+    //         index++;
+    //     }
+    //     return true;
+
+    // }
+
+    // private async Task<Boolean> AddJoinedRace(int raceId,List<Boat> boats)
+    // {
+
+    //     race = await repository.GetRaceAsync(raceId);
+    //     var results = await repository.GetResultsAsync(raceId);
+    //     resultList2 = resultList2.OrderBy(x => x.DNF).ThenBy(x => x.FixedTime).ToList();
+
+    //     var index = 1;
+    //     results = await repository.GetResultsAsync(Id);
+    //     foreach (var item in resultList2)
+    //     {
+    //         if (item.Position != index)
+    //         {
+    //             Result result = results.First(x => x.Id == item.Id);
+    //             result.PositionRace2 = index;
+    //         //    await repository.SaveResultAsync(result);
+    //         }
+    //         item.Position = index;
+    //         index++;
+    //     }
+    //     var boatcount1Race = resultList.Where(x => x.DNS == false).Count();
+    //     var boatcount2Race = resultList2.Where(x => x.DNS == false).Count();
+    //     foreach (var item in boats)
+    //     {
+    //         var firstresult = resultList.Where(x => x.BoatId == item.Id).FirstOrDefault();
+    //         var nextresult = resultList2.Where(x => x.BoatId == item.Id).FirstOrDefault();
+    //         if (firstresult == null || nextresult == null) continue;
+    //         SummaryItem summaryItem = new()
+    //             {
+    //                 BoatId = item.Id,
+    //                 BoatName = item.Name
+    //             };
+    //         if (firstresult != null)
+    //         {
+    //             summaryItem.Race1 = firstresult.Position;
+    //             if (firstresult.DNS)
+    //             {
+    //                 summaryItem.Race1 = boatcount1Race + 2;
+    //             }
+    //             if (firstresult.DNF)
+    //             {
+    //                 summaryItem.Race1 = boatcount1Race + 1;
+    //             }
+    //         }
+    //         else
+    //         {
+    //             summaryItem.Race1 = boatcount1Race + 2;
+    //         }
+    //         if (nextresult != null)
+    //         {
+    //             summaryItem.Race2 = nextresult.Position;
+    //             if (nextresult.DNS)
+    //             {
+    //                 summaryItem.Race2 = boatcount2Race + 2;
+    //             }
+    //             if (nextresult.DNF)
+    //             {
+    //                 summaryItem.Race2 = boatcount2Race + 1;
+    //             }
+    //         }
+    //         else
+    //         {
+    //             summaryItem.Race2 = boatcount2Race + 2;
+    //         }
+    //         summary.Add(summaryItem);
+    //     }
+    //     summary = summary.OrderBy(x => x.Summary).ThenBy(x => x.Race2).ToList();
+    //     index = 1;
+    //     foreach (var item in summary)
+    //     {
+    //         item.Position = index;
+    //         var result = results.Where(x => x.BoatId == item.BoatId).First();
+    //         if (result.Position != index)
+    //         {
+    //             result.Position = index;
+    //          //  await repository.SaveResultAsync(result);
+    //         }
+    //         index++;
+    //     }
+    //     return true;
+    // }
+
     public class ResultItem
     {
         public int Id { get; set; }
@@ -340,9 +469,11 @@
     {
         public int Position { get; set; }
         public int BoatId { get; set; }
+        public int RaceId { get; set; }
         public string BoatName { get; set; }
         public int Race1 { get; set; }
         public int Race2 { get; set; }
-        public int Summary { get { return Race1 + Race2; } }
+        public int Race3 { get; set; }
+        public int Summary { get { return Race1 + Race2 + Race3; } }
     }
 }
