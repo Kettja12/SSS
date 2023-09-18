@@ -1,0 +1,51 @@
+﻿@using static SSS.Pages.RaceResultDetails;
+<h3>@Title</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Position</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Sailnumber</th>
+            <th>Skipper</th>
+            <th>Finnrating</th>
+            <th>StartTime</th>
+            <th>EndTime</th>
+            <th>SailTime</th>
+            <th>Fixed Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in ResultList)
+        {
+            <tr>
+                <td>@item.Position</td>
+                <td>@item.Name</td>
+                <td>@item.Type</td>
+                <td>@item.SailNumber</td>
+                <td>@item.Skipper</td>
+                <td>@item.Finnrating.ToString("0.0000")</td>
+                <td>@item.StartTime</td>
+                @if (item.DNF)
+                {
+                    <td>DNF</td>
+                }
+                else
+                {
+                    <td>@item.EndTime</td>
+                    <td>@item.SailTime</td>
+                    <td>@item.FixedTime</td>
+                }
+            </tr>
+        }
+
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public List<ResultItem> ResultList { get; set; } = new();
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+}

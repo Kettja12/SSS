@@ -1,0 +1,49 @@
+﻿@using static SSS.Pages.RaceResultDetails;
+<h3>RaceSummary</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Place</th>
+            <th>Name</th>
+            <th>Race 1</th>
+            @if (Racecount > 1)
+            {
+                <th>Race 2</th>
+            }
+            @if (Racecount > 2)
+            {
+                <th>Race 3</th>
+            }
+            <th>Summary</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Summary)
+        {
+            <tr>
+                <td>@item.Position</td>
+                <td>@item.BoatName</td>
+                <td>@item.Race1</td>
+                @if (Racecount > 1)
+                {
+                    <td>@item.Race2</td>
+                }
+                @if (Racecount > 2)
+                {
+                    <td>@item.Race3</td>
+                }
+
+                <td>@item.Summary</td>
+            </tr>
+        }
+
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public List<SummaryItem> Summary { get; set; } = new();
+    [Parameter]
+    public int Racecount { get; set;} 
+}
